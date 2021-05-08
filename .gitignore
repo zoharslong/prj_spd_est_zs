@@ -12,6 +12,7 @@ dist
 idea
 build
 __pycache__
+__pycache__/*
 
 # My configurations:
 .idea
@@ -28,5 +29,3 @@ deploy_key_rsa
 /dst/doc_xpt/*
 /prg_dly/prg_nit.py
 /prg_dly/prg_prm.py
-/hst
-/hst/*
