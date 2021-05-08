@@ -1,0 +1,32 @@
+# Windows:
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Python:
+# *.py[cod]
+*.so
+*.egg
+*.egg-info
+dist
+idea
+build
+__pycache__
+
+# My configurations:
+.idea
+.idea/*
+.ipynb_checkpoints
+.ipynb_checkpoints/*
+db.ini
+deploy_key_rsa
+
+# secret
+/dst/doc_tkn
+/dst/doc_tkn/*
+/dst/doc_xpt
+/dst/doc_xpt/*
+/prg_dly/prg_nit.py
+/prg_dly/prg_prm.py
+/hst
+/hst/*
