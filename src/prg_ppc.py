@@ -160,7 +160,7 @@ def sop_shw_shd_bke_lst_zs(slf):
     return dtf
 
 
-# 中山q房二手成交列表页数据提取
+# 中山q房二手成交列表页数据提取g
 def sop_dlg_shd_qfg_lst_zs(slf):
     """
     Soup dealing logs on second hand dealing from Qfang in list page of ZhongShan city
