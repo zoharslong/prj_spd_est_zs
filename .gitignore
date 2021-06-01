@@ -29,4 +29,4 @@ deploy_key_rsa
 /dst/doc_xpt
 /dst/doc_xpt/*
 /src/prg_nit.py
-/src/prg_prm.py
+/src/prg_tkn.py
