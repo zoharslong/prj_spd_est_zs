@@ -201,7 +201,7 @@ def sop_dlg_shd_qfg_lst_zs(slf):
         dtf['district'] = dtf.apply(
             lambda x: re_find('\[(.*?)\]', x['address'])[0] if re_find('\[(.*?)\]', x['address']) else "", axis=1
         )
-        dtf['address'] = dtf.apply(lambda x: re_find('\](.*$)', x['address'])[0], axis=1)
+        dtf['address'] = dtf.apply(lambda x: re_find('\](.*$)', x['address'])[0] if re_find('\](.*$)', x['address']) else x['address'], axis=1)
         dtf['QfangEstateNo'] = dtf.apply(lambda x: re_find('^(.*?) ', x['est_rom_sqr'])[0], axis=1)
         dtf['__time_ctt'] = dtz('now').dtt_to_typ('str', '%Y-%m-%d %H:%M:%S', rtn=True)
     except (KeyError, ValueError):
