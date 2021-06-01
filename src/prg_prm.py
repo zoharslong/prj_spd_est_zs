@@ -7,7 +7,7 @@ basic import and export program.
 """
 from .__init__ import chk_sys
 from pyzohar import dtz
-from prg_tkn import dct_jgh, dct_sql, str_mng  # 自用的极光ip, mysql库卡密, mongodb库卡密
+from prg_tkn import dct_jgh, dct_sql, str_mng  # 自用的极光ip代理卡密, mysql库卡密, mongodb库卡密
 
 
 lst_bch_bke_zs = [
