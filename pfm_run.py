@@ -5,18 +5,51 @@ Created on 2021.03.22
 Start operation.
 @author: zoharslong
 """
-from prg_dly.prg_ppc import *
-dtt_now = dtz('now').dtt_to_typ(rtn=True)  # 当前日期的标准格式'yyyy-mm-dd'
-flt_pgs = [3, 4, 99]  # 分别适用于小区、成交、挂单的爬取页数要求
+from src.prg_ppc import *
 
-def pfm_run():
-  pass
 
+def pfm_run(lcn, sop, pg_max, *, gte_dtt=None):
+  """
+  爬虫、更新到mysql
+  @param lcn: 爬虫dfz对应的参数字典
+  @param sop: 爬虫页面的beautifulsoup解析方法
+  @param pg_max: 爬取的页面数
+  @param gte_dtt: 为了更新mysql而所需获取的爬虫运行时间
+  @return: None
+  """
+  gte_dtt = dtz('now').dtt_to_typ(rtn=True) if gte_dtt is None else gte_dtt
+  pfm = szs(lcn=lcn)  # 中山贝壳二手成交更新
+  try:
+    pfm.spd_bch(sop, prm='lst', pg_max=pg_max)
+    print('*****')
+    print('info: %s successed.' % pfm.lcn['cln'])
+  except:
+    print('\n*****')
+    print('*****')
+    print('info: ERROR - %s failed.' % pfm.lcn['cln'])
+    print('*****')
+    print('*****\n')
+  finally:
+    pfm.sql_xpt_dlg({'__time_ctt': {'$gte': gte_dtt}})  # 当天以后的爬虫入库
+    print('info: %s exported into mysql on %s.' % (pfm.lcn['cln'], gte_dtt))
+    print('*****\n')
 
 
 print('\n\n*****')
-print('info: %s, good morning!' % dtt_now)
+print('info: %s, good morning!' % dtz('now').dtt_to_typ(rtn=True))
 print('*****\n')
+flt_pgs = [4, 9, 99]  # 分别适用于小区、成交、挂单的爬取页数要求
+flt_pgs_qfg = 30
+
+# 爬虫流程 - 中山贝壳成交
+pfm_run(lcn_dlg_shd_bke_zs, sop_dlg_shd_bke_lst_zs, flt_pgs[1])
+# 爬虫流程 - 中山Q房成交
+pfm_run(lcn_dlg_shd_qfg_zs, sop_dlg_shd_qfg_lst_zs, flt_pgs_qfg)
+
+# 爬虫流程 - 中山贝壳挂盘
+pfm_run(lcn_shw_shd_bke_zs, sop_shw_shd_bke_lst_zs, flt_pgs[2])
+# 爬虫流程 - 中山Q房挂盘
+pfm_run(lcn_shw_shd_qfg_zs, sop_shw_shd_qfg_lst_zs, flt_pgs[2])
 
 # 小区流程 - 中山贝壳
 if dtz('now').dtt_to_typ('weekday', rtn=True) == 6:  # 每周六运行一次
@@ -33,65 +66,10 @@ if dtz('now').dtt_to_typ('weekday', rtn=True) == 6:  # 每周六运行一次
     # # # 本地集中导入小区信息结束
     print('*****')
     print('info: est_shd_bke_zs successed.')
-  except:
-    print('info: est_shd_bke_zs failed.')
-  finally:
     print('*****\n')
-
-# 爬虫流程 - 中山贝壳成交
-try:
-  bke = szs(lcn=lcn_dlg_shd_bke_zs)   # 中山贝壳二手成交更新
-  bke.spd_bch(sop_dlg_shd_bke_lst_zs, prm='lst', pg_max=flt_pgs[1])
-  # bke.spd_bch_whl_swh(sop_dlg_shd_bke_lst_zs, pg_max=70, lst_bch=lst_bch_bke_zs)    # 通刷
-  print('*****')
-  print('info: dlg_shd_bke_zs successed.')
-except:
-  print('info: dlg_shd_bke_zs failed.')
-finally:
-  bke = szs(lcn=lcn_dlg_shd_bke_zs)   # 入库流程
-  bke.sql_xpt_dlg({'__time_ctt': {'$gte': dtt_now}})  # 当天以后的爬虫入库
-  print('info: dlg_shd_bke_zs exported into mysql.')
-  print('*****\n')
-
-# 爬虫流程 - 中山贝壳挂盘
-try:
-  bke = szs(lcn=lcn_shw_shd_bke_zs)   # 中山贝壳二手挂盘
-  bke.spd_bch(sop_shw_shd_bke_lst_zs, prm='lst', pg_max=flt_pgs[2])
-  print('*****')
-  print('info: shw_shd_bke_zs successed.')
-except:
-  print('info: shw_shd_bke_zs failed.')
-finally:
-  bke = szs(lcn=lcn_shw_shd_bke_zs)   # 入库流程
-  bke.sql_xpt_dlg({'__time_ctt': {'$gte': dtt_now}})  # 当天以后的爬虫入库
-  print('info: shw_shd_bke_zs exported into mysql.')
-  print('*****\n')
-
-# 爬虫流程 - 中山Q房成交
-try:
-  qfg = szs(lcn=lcn_dlg_shd_qfg_zs)   # 中山Q房二手成交更新
-  qfg.spd_bch(sop_dlg_shd_qfg_lst_zs, prm='lst', pg_max=flt_pgs[1])
-  # qfg.spd_bch_whl_swh(sop_dlg_shd_qfg_lst_zs, pg_max=40, lst_bch=lst_bch_qfg_zs)    # 通刷
-  print('*****')
-  print('info: dlg_shd_qfg_zs successed.')
-except:
-  print('info: dlg_shd_qfg_zs failed.')
-finally:
-  qfg = szs(lcn=lcn_dlg_shd_qfg_zs)   # 入库流程
-  qfg.sql_xpt_dlg({'__time_ctt': {'$gte': dtt_now}})  # 当天以后的爬虫入库
-  print('info: dlg_shd_qfg_zs exported into mysql.')
-  print('*****\n')
-
-# 爬虫流程 - 中山Q房挂盘
-try:
-  qfg = szs(lcn=lcn_shw_shd_qfg_zs)   # 中山Q房二手挂盘
-  qfg.spd_bch(sop_shw_shd_qfg_lst_zs, prm='lst', pg_max=flt_pgs[2])
-  print('*****')
-  print('info: shw_shd_qfg_zs successed.')
-except:
-  print('info: shw_shd_qfg_zs failed.')
-finally:
-  qfg = szs(lcn=lcn_shw_shd_qfg_zs)   # 入库流程
-  qfg.sql_xpt_dlg({'__time_ctt': {'$gte': dtt_now}})  # 当天以后的爬虫入库
-  print('info: sgw_shd_qfg_zs exported into mysql.')
-  print('*****\n')
+  except:
+    print('\n*****')
+    print('*****')
+    print('info: ERROR - est_shd_bke_zs failed.')
+    print('*****')
+    print('*****\n')
