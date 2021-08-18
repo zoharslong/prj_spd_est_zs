@@ -125,6 +125,10 @@ def sop_shw_shd_bke_lst_zs(slf):
             re_find('fang/(\d+).html', i.find('div', class_="title").find('a')['href'])[0] for
             i in sop.find('ul', class_='sellListContent').find_all('li', class_='clear')
         ]
+        dtf['CommunityNo'] = [
+            re_find('xiaoqu/(.*?)/', i.find('div', class_='positionInfo').find('a')['href'])[0] for
+            i in sop.find('ul', class_='sellListContent').find_all('li', class_='clear')
+        ]
         dtf['title'] = [
             re_sub('[\n\r\t]', '', i.find_all('div', class_="title")[0].text) for
             i in sop.find('ul', class_='sellListContent').find_all('li', class_='clear')

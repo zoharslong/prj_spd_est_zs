@@ -35,6 +35,27 @@ def pfm_run(lcn, sop, pg_max, *, gte_dtt=None):
     print('*****\n')
 
 
+def pfm_bch_zssgxkz(pgs=1, slf=None):
+  """
+  中山施工建设许可证，每日更新，可能会随着审批状态的变化由新行覆盖库内数据
+  http://jsj.zs.gov.cn/dwfwxt/fdcxmspcx/index.html
+  @param pgs: pages
+  @param slf: rsl = dfz(lcn=lcn_zssgxkz_zs)
+  @return: None
+  """
+  slf.lcn['prm']['page'] = pgs
+  slf.lcn['prm']['start'] = (slf.lcn['prm']['page']-1)*20
+  slf.api_run()
+  slf.dts = slf.dts['rows']
+  slf.typ_to_dtf()
+  slf.rnm_clm(slf.lcn['ppc']['clm_rnm'])
+  slf.ltr_clm_typ(slf.lcn['ppc']['clm_typ'])
+  slf.ltr_clm_rpc('工程地址', '"', "'", prm='part')
+  slf.srt_clm(list(slf.lcn['ppc']['clm_typ'].keys()))
+  slf.sql_xpt()
+  # slf.mng_xpt(lst_ndx=slf.lcn['ppc']['ndx'])
+
+
 print('\n\n*****')
 print('info: %s, good morning!' % dtz('now').dtt_to_typ(rtn=True))
 print('*****\n')
@@ -50,6 +71,12 @@ pfm_run(lcn_dlg_shd_qfg_zs, sop_dlg_shd_qfg_lst_zs, flt_pgs_qfg)
 pfm_run(lcn_shw_shd_bke_zs, sop_shw_shd_bke_lst_zs, flt_pgs[2])
 # 爬虫流程 - 中山Q房挂盘
 pfm_run(lcn_shw_shd_qfg_zs, sop_shw_shd_qfg_lst_zs, flt_pgs[2])
+
+# 爬虫流程 - 施工许可证
+rsl = dfz(lcn=lcn_zssgxkz_zs)
+pfm_bch_zssgxkz(3, rsl)
+pfm_bch_zssgxkz(2, rsl)
+pfm_bch_zssgxkz(1, rsl)
 
 # 小区流程 - 中山贝壳
 if dtz('now').dtt_to_typ('weekday', rtn=True) == 6:  # 每周六运行一次
@@ -73,3 +100,6 @@ if dtz('now').dtt_to_typ('weekday', rtn=True) == 6:  # 每周六运行一次
     print('info: ERROR - est_shd_bke_zs failed.')
     print('*****')
     print('*****\n')
+
+
+
