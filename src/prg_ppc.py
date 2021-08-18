@@ -66,7 +66,7 @@ def sop_est_shd_bke_lst(slf):
 
 
 # 中山贝壳二手成交列表页数据提取
-def sop_dlg_shd_bke_lst_zs(slf, dfz_shd_bke=dfz(lcn=lcn_est_shd_bke_zs)):
+def sop_dlg_shd_bke_lst_zs(slf, dfz_shd_bke=dfz(lcn=lcn_est_shd_bke_sz)):
     """
     Soup dealing logs on second hand dealing from beike in list page of ZhongShan city
     :param slf: a spd with the target html page file
@@ -117,12 +117,16 @@ def sop_dlg_shd_bke_lst_zs(slf, dfz_shd_bke=dfz(lcn=lcn_est_shd_bke_zs)):
 
 
 # 中山贝壳二手挂盘列表页数据提取
-def sop_shw_shd_bke_lst_zs(slf):
+def sop_shw_shd_bke_lst_sz(slf):
     sop = BeautifulSoup(slf.dts, features="html.parser")    # , features="lxml"
     dtf = DataFrame([])
     try:
         dtf['BeikeEstateNo'] = [
             re_find('fang/(\d+).html', i.find('div', class_="title").find('a')['href'])[0] for
+            i in sop.find('ul', class_='sellListContent').find_all('li', class_='clear')
+        ]
+        dtf['CommunityNo'] = [
+            re_find('xiaoqu/(.*?)/', i.find('div', class_='positionInfo').find('a')['href'])[0] for
             i in sop.find('ul', class_='sellListContent').find_all('li', class_='clear')
         ]
         dtf['title'] = [
@@ -153,14 +157,86 @@ def sop_shw_shd_bke_lst_zs(slf):
             re_sub('[\n\t\r ]|单价', '', i.find('div', class_='unitPrice').text) for
             i in sop.find('ul', class_='sellListContent').find_all('li', class_='clear')
         ]
-        dtf['__time_ctt'] = dtz('now').dtt_to_typ('str', '%Y-%m-%d %H:%M:%S', rtn=True)
+        dtf['__time'] = dtz('now').dtt_to_typ('str', '%Y-%m-%d %H:%M:%S', rtn=True)
         dtf['__time_day'] = dtz('now').dtt_to_typ('str', '%Y-%m-%d', rtn=True)
     except (KeyError, ValueError):
         print('skip: nothing in this page.')
     return dtf
 
 
-# 中山q房二手成交列表页数据提取g
+# 贝壳二手挂单详情
+def sop_shw_shd_bke_ctt_sz(slf):
+    """
+    @param slf: BeautifulSoup(self.dts).
+    @return: a dataFrame on target information
+    """
+    sop = BeautifulSoup(slf.dts, features="lxml")
+    dct = {}
+    str_dtt = dtz('now').dtt_to_typ('str', '%Y-%m-%d %H:%M:%S', rtn=True)
+    str_dtd = dtz('now').dtt_to_typ('str', '%Y-%m-%d', rtn=True)
+    try:
+        dct_bsc = {
+            'newOn': [re_sub('[\n ]', '', i.text) for i in sop.find_all('li') if re_find('挂牌时间', i.text)][0],
+            'district': re_sub('二手房', '', sop.find('div', class_='fl l-txt').find_all('a')[-3].text),
+            'area': re_sub('二手房', '', sop.find('div', class_='fl l-txt').find_all('a')[-2].text),
+            'title': re_sub('[\n ]', '', sop.find('div', class_='title').text),
+            'tprice_d': sop.find('div', class_='price').find('span', 'total').text if sop.find(
+                'div', class_='price').find('span', class_='total') else '',
+            'aprice_d': sop.find('div', class_='unitPrice').find('span', 'unitPriceValue').text if sop.find(
+                'div', class_='unitPrice').find('span', 'unitPriceValue') else '',
+            'tprice_p': sop.find('div', class_='priceBox').find_all('p')[0].text if sop.find(
+                'div', class_='priceBox') else '',
+            'aprice_p': sop.find('div', class_='priceBox').find_all('p')[1].text if sop.find(
+                'div', class_='priceBox') else '',
+            'room': sop.find('div', class_='room').find(class_='mainInfo').text,
+            'floor': sop.find('div', class_='room').find(class_='subInfo').text,
+            'face': sop.find('div', class_='type').find(class_='mainInfo').text,
+            'decoration': sop.find('div', class_='type').find(class_='subInfo').text,
+            'square': sop.find('div', class_='area').find(class_='mainInfo').text,
+            'age': sop.find('div', class_='area').find(class_='subInfo').text,
+        }
+        dct_ctt = {
+            i.find('span', class_='label').text:
+                re_sub('[\n ]', '', re_sub(i.find('span', class_='label').text, '', i.text)) for
+            i in sop.find('div', class_='introContent').find_all('li')
+        }
+        dct_trn = {
+            i.find('span', class_='label').text:
+                re_sub('[\n ]', '', re_sub(i.find('span', class_='label').text, '', i.text)) for
+            i in sop.find('div', class_='transaction').find_all('li')
+        }
+        dct.update(dct_bsc)
+        dct.update(dct_ctt)
+        dct.update(dct_trn)
+        dct.update({'__time_day': str_dtd})
+        dct.update({'__time_ctt': str_dtt})
+    except (AttributeError, IndexError):
+        pass
+    try:  # 两个可能侦测到shd_id的点位
+        str_shd = re_find('ershoufang/(\d+).html', sop.find_all('meta')[-3]['content'])[0]
+    except IndexError:
+        try:
+            str_shd = re_find('ershoufang/(\d+).html', [
+                i['href'] for i in sop.find('head').find_all('link') if re_find('ershoufang/(\d+).html', i['href'])
+            ][0])[0]
+        except IndexError:  # 实在无法找到则排除这个shd_id目标
+            if '网站开启了安全防护策略，检测到您最近的操作异常' in sop.text:
+                print('info: anti-anti-spider generating.')
+                slf.api_prx(frc=True, dct_jgh=dct_jgh)
+            else:
+                print('info: something wrong happened, skip this estate.')
+                pass
+            str_shd = re_find('ershoufang/(\d+).html', slf.lcn['url'])[0]
+    if dct != {}:
+        dtf = DataFrame([dct])
+        dtf['BeikeEstateNo'] = str_shd
+    else:
+        dtf = DataFrame([])
+        slf.ltr_cln_dcm({'BeikeEstateNo': str_shd, '__time_day': str_dtd}, {'$set': {'__time_ctt': str_dtt}})
+    return dtf
+
+
+# 中山q房二手成交列表页数据提取
 def sop_dlg_shd_qfg_lst_zs(slf):
     """
     Soup dealing logs on second hand dealing from Qfang in list page of ZhongShan city

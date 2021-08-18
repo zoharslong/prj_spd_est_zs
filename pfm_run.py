@@ -20,7 +20,11 @@ def pfm_run(lcn, sop, pg_max, *, gte_dtt=None):
   gte_dtt = dtz('now').dtt_to_typ(rtn=True) if gte_dtt is None else gte_dtt
   pfm = szs(lcn=lcn)  # 中山贝壳二手成交更新
   try:
-    pfm.spd_bch(sop, prm='lst', pg_max=pg_max)
+    if type(pg_max) in [int, float]:
+      pfm.spd_bch(sop, prm='lst', pg_max=pg_max)
+    else:
+      pfm.ltr_spd_for_dcm(1, 'gte', 'drop', False)
+      pfm.spd_bch(sop, prm='ctt', srt={'cnt': 1})
     print('*****')
     print('info: %s successed.' % pfm.lcn['cln'])
   except:
@@ -29,47 +33,19 @@ def pfm_run(lcn, sop, pg_max, *, gte_dtt=None):
     print('info: ERROR - %s failed.' % pfm.lcn['cln'])
     print('*****')
     print('*****\n')
-  finally:
-    pfm.sql_xpt_dlg({'__time_ctt': {'$gte': gte_dtt}})  # 当天以后的爬虫入库
-    print('info: %s exported into mysql on %s.' % (pfm.lcn['cln'], gte_dtt))
+  # finally:
+    # pfm.sql_xpt_dlg({'__time_ctt': {'$gte': gte_dtt}})  # 当天以后的爬虫入库
+    # print('info: %s exported into mysql on %s.' % (pfm.lcn['cln'], gte_dtt))
     print('*****\n')
 
 
 print('\n\n*****')
 print('info: %s, good morning!' % dtz('now').dtt_to_typ(rtn=True))
 print('*****\n')
-flt_pgs = [4, 9, 99]  # 分别适用于小区、成交、挂单的爬取页数要求
+flt_pgs = [4, 9, 101]  # 分别适用于小区、成交、挂单的爬取页数要求
 flt_pgs_qfg = 30
 
-# 爬虫流程 - 中山贝壳成交
-pfm_run(lcn_dlg_shd_bke_zs, sop_dlg_shd_bke_lst_zs, flt_pgs[1])
-# 爬虫流程 - 中山Q房成交
-pfm_run(lcn_dlg_shd_qfg_zs, sop_dlg_shd_qfg_lst_zs, flt_pgs_qfg)
-
-# 爬虫流程 - 中山贝壳挂盘
-pfm_run(lcn_shw_shd_bke_zs, sop_shw_shd_bke_lst_zs, flt_pgs[2])
-# 爬虫流程 - 中山Q房挂盘
-pfm_run(lcn_shw_shd_qfg_zs, sop_shw_shd_qfg_lst_zs, flt_pgs[2])
-
-# 小区流程 - 中山贝壳
-if dtz('now').dtt_to_typ('weekday', rtn=True) == 6:  # 每周六运行一次
-  try:
-    est = szs(lcn=lcn_est_shd_bke_zs)   # 中山贝壳小区刷新, 用于配合BeikeEstateNo拼接相关信息至贝壳成交
-    est.spd_bch_whl_swh(sop_est_shd_bke_lst, pg_max=flt_pgs[0], lst_bch=lst_bch_bke_zs)  # 通刷
-    # est.spd_bch(sop_est_shd_bke_lst, prm='lst', pg_max=11)
-    # # # 本地集中导入小区信息开始
-    # # from pandas import read_excel
-    # # est.dts = read_excel('est.xlsx')
-    # # est.ltr_clm_typ(est.lcn['ppc']['clm_typ'])
-    # # est.fll_clm_na('')
-    # # est.mng_xpt(est.lcn['ppc']['ndx'])
-    # # # 本地集中导入小区信息结束
-    print('*****')
-    print('info: est_shd_bke_zs successed.')
-    print('*****\n')
-  except:
-    print('\n*****')
-    print('*****')
-    print('info: ERROR - est_shd_bke_zs failed.')
-    print('*****')
-    print('*****\n')
+# 爬虫流程 - 深圳贝壳挂盘
+pfm_run(lcn_shw_shd_bke_sz, sop_shw_shd_bke_lst_sz, flt_pgs[2])
+# 爬虫流程 - 深圳贝壳挂盘详情
+pfm_run(lcn_shw_shd_bke_sz, sop_shw_shd_qfg_ctt_sz, 'ctt')
